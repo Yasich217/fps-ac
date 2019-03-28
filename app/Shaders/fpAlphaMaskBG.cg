@@ -1,0 +1,23 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+
+#include "Shaders/libAlphaMask.cg"
+
+float4 main(float2 tc:TEXCOORD0, 
+            float2 sc:TEXCOORD1,
+            uniform float alpha = 1, 
+            uniform sampler2D textureA, 
+            uniform sampler2D textureB,
+            uniform float zoomA = 1,
+            uniform float zoomB = 1,
+            uniform float fade = 0,
+            uniform float swipe = 0,
+            uniform float offsetA = 0,
+            uniform float offsetB = 0) : COLOR
+{
+    return combine(tc, textureA, textureB, zoomA, zoomB, swipe, fade, offsetA, offsetB) * alpha;
+}

@@ -1,0 +1,130 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! fpBox.cg
+  
+Shader for drawing a glowing box, with premultiplied alpha
+
+  +-----------------------------------+  --- quad boundary
+  |            outerGlow              |  | distance
+  |  ===============================  |  - thickness
+  |  ||        innerGlow          ||  |
+  |  ||                           ||  |
+  |  ||        innerGlow          ||  |
+  |  ===============================  |  - thickness
+  |            outerGlow              |  | distance
+  +-----------------------------------+  --- quad boundary
+
+PARAMETERS:
+
+thickness: The thickness of the border
+
+distance: The distance of the border from the quad edge
+
+boxColor: The color of the border
+
+innerGlow: The radius of the inner glow Gaussian blur
+
+innerGlowColor: The color of the inside glow
+
+outerGlow: The radius of the outer glow Gaussian blur
+
+outerGlowColor: The color of the outer glow - should not exceed 'distance'
+
+fillColorTop, fillColorBottom: The colors of the gradient to apply to the inside of the box
+
+fillPositionTop, fillPositionBottom: The positional extents of the gradient, in terms of the
+fraction of the inner box (i.e. 0.0 = top of the box, 1.0 = bottom of the box)
+
+textureColor: The color to modulate the fill texture by
+
+NOTES:
+ 
+All sizes and positions are given in screen coordinates, except fillPosition.
+
+Inner rectangle size is quadsize - 2*(distance + thickness).
+
+Everything is clamped to the render quad.
+
+If an alpha texture is provided, it MUST be alpha-premultiplied.
+
+All colors must be alpha-premultiplied, i.e. white with a=0.5 would be (0.5,0.5,0.5,0.5).
+
+The texture is clamped to the inside of the box, but sized to fit the quad.
+
+We will want to eventually make a task-specific version of this shader when we get our UX nailed
+down because dang is this overly complex and general for a pixel shader.
+
+*/
+
+#include "Shaders/libGauss.cg"
+
+int within(uniform float distance, float val)
+{
+    return step(distance, val) * step(distance, 1 - val);
+}
+
+float ramp(uniform float d1, uniform float d2, float val)
+{
+    return smoothstep(d1, d2, val)*smoothstep(d1, d2, 1 - val);
+}
+
+float4 main(float4 tc : TEXCOORD0, float2 pv : TEXCOORD2,
+            uniform float thickness, uniform float distance,
+            uniform float4 boxColor,
+            uniform float innerGlow, uniform float4 innerGlowColor,
+            uniform float outerGlow, uniform float4 outerGlowColor,
+            uniform float4 fillColorTop, uniform float4 fillColorBottom,
+            uniform float fillPositionTop, uniform float fillPositionBottom,
+            uniform sampler2D texture,
+            uniform float4 textureColor) : COLOR
+{
+    //! Pixel-normalized coordinates
+    const float2 pdist = distance/pv, pthick = thickness/pv;
+    const float2 pIGlow = (innerGlow + 1.0/256)/pv, pOGlow = (outerGlow + 1.0/256)/pv;
+    const float2 pix1 = 1.0/pv;
+
+    //! Box anatomy
+    const float2 oGlowStart = pdist - pOGlow;
+    const float2 oGlowEnd = pdist + pOGlow*0.5;
+    const float2 boxStart = pdist;
+    const float2 boxEnd = pdist + pthick;
+    const float2 iGlowStart = boxEnd - pIGlow;
+    const float2 iGlowEnd = boxEnd + pIGlow;
+
+    //! Are we within the outer box?
+    float outer = ramp(boxStart.x - pix1.x, boxStart.x, tc.x) 
+        * ramp(boxStart.y - pix1.y, boxStart.y, tc.y);
+    
+    //! Are we within the inner box?
+    float inner = ramp(boxEnd.x - pix1.x, boxEnd.x, tc.x)
+        * ramp(boxEnd.y - pix1.y, boxEnd.y, tc.y);
+
+    //! Outer glow ramp
+    float orampx = ramp(oGlowStart.x, oGlowEnd.x, tc.x),
+        orampy = ramp(oGlowStart.y, oGlowEnd.y, tc.y);
+    float orampxy = orampx*orampy*(1 - outer);
+    float4 orampcolor = outerGlowColor*orampxy;
+
+    //! Inner glow ramp
+    float irampx = ramp(iGlowStart.x, iGlowEnd.x, tc.x),
+        irampy = ramp(iGlowStart.y, iGlowEnd.y, tc.y);
+    float irampxy = inner*(1 - irampx*irampy);
+    float4 irampcolor = innerGlowColor*irampxy;
+
+    float fillGradient = smoothstep(boxEnd.y + fillPositionTop*(1 - boxEnd.y),
+                                    boxEnd.y + fillPositionBottom*(1 - boxEnd.y),
+                                    1 - tc.y);
+
+    float4 box = boxColor*outer*(1 - inner);
+    float4 txt = inner*textureColor*tex2D(texture, (float3)tc);
+    float4 fill = inner*(fillGradient*fillColorBottom + (1-fillGradient)*fillColorTop);
+    return box + txt*(1 - fill.a)
+        + orampcolor + irampcolor*(1 - fill.a)
+        + fill
+        ;
+}
+            

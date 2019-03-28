@@ -1,0 +1,32 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! @file  vpAddBorder.cg
+
+This vertex shader adds a texel border around the current slate, with the "border" parameter,
+given as a size in display coordinates.
+
+Everything else is the same as vpBasic (in fact it just uses vpBasic for everything).
+*/
+
+#include "Shaders/libVertexFuncs.cg"
+
+output main(float3 position : POSITION,
+            float4 tc0 : TEXCOORD0,
+            uniform float4x4 ModelView,
+            uniform float4x4 ModelViewProj,
+            uniform float4x4 TextureTransform,
+            uniform float border)
+{
+    float4 center = float4(0.5, 0.5, 0, 0);
+
+    output corner = process(position, tc0, ModelView, ModelViewProj, TextureTransform);
+    float4 scale = float4(1,1,1,1) + float4(border*2/corner.tc2.x, border*2/corner.tc2.y, 0, 0);
+
+    return process((position - float3(center))*float3(scale) + float3(center),
+                   (tc0 - center)*scale + center,
+                   ModelView, ModelViewProj, TextureTransform);
+}

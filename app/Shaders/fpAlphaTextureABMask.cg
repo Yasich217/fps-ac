@@ -1,0 +1,22 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! @file fpAlphaFadeMaskAB.cg
+
+*/
+
+float4 main(float4 tc : TEXCOORD0,
+            float2 sc : TEXCOORD1,
+            uniform float alpha = 1,
+            uniform sampler2D textureA,
+            uniform sampler2D textureB,
+            uniform sampler2D mask,
+            uniform float fade = 1): COLOR
+{
+	float ma = 1.0-tex2D(mask,sc).a;
+    return ( tex2D(textureA,tc.xy) * (1-fade) + tex2D(textureB,tc.zw) * fade ) * ma * alpha;
+}
+

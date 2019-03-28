@@ -1,0 +1,23 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! @file fpAlphaTextureMask.cg
+
+Basic textured shader with additional alpha parameter.  The input texture should be
+alpha-premultiplied (this will be the case with a fixed alpha of 1, as with the JPEG loader).
+The output is alpha-premultiplied.
+
+*/
+
+float4 main(float2 tc : TEXCOORD0,
+            float2 sc : TEXCOORD1,
+            uniform float alpha = 1,
+            uniform sampler2D texture,
+            uniform sampler2D mask): COLOR
+{
+	float ma = 1.0-tex2D(mask,sc).a;
+    return tex2D(texture,tc) * ma * alpha;
+}

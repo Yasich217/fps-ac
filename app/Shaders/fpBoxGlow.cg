@@ -1,0 +1,46 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! fpBoxGlow.cg
+  
+Shader for drawing an outer glow on a box. For use with vpAddBorder.cg
+
+PARAMETERS:
+
+glowRadius: The radius of the outer glow
+
+glowColor: The color of the outer glow (alpha premultiplied)
+
+*/
+
+float gaussstep(float min, float max, float x) 
+{
+    float t = clamp((x - min)/(max - min),0,1);
+    return smoothstep(0, 1, (1 - cos(t*3.1415927))/2);
+}
+
+
+float ramp(uniform float d1, uniform float d2, float val)
+{
+    return smoothstep(d1, d2, val)*smoothstep(d1, d2, 1 - val);
+}
+
+float4 main(float4 tc : TEXCOORD0, float2 pv : TEXCOORD2,
+            uniform float glowRadius, uniform float4 glowColor): COLOR
+{
+    float2 sc = float2(1,1)/pv;
+
+    //! Inner box
+    float inner = ramp(0, sc.x, tc.x)*ramp(0, sc.y, tc.y);
+
+    //! Outer glow
+    float outer = ramp(-glowRadius*sc.x, glowRadius*sc.x, tc.x)
+        * ramp(-glowRadius*sc.y, glowRadius*sc.y, tc.y);
+
+    return glowColor*outer*(1 - inner);
+}
+
+            

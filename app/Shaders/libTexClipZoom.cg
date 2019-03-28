@@ -1,0 +1,20 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+
+float2 zoomed(float2 tc, float scale)
+{
+    return float2(tc.x/scale + (1.0-1.0/scale)*0.5, tc.y/scale + (1.0-1.0/scale)*0.5);
+}
+
+float2 clipPosRect(float2 texRect, float4 texClipPosRect, float2 texcoord, float scale){
+    // clip texcoord
+    float2 clipRect = texClipPosRect.zw / texRect;
+    float2 clipPos = texClipPosRect.xy / texRect;
+    clipPos.y = 1.0 - (clipPos.y + clipRect.y);
+
+    return zoomed(texcoord * clipRect + clipPos, scale);
+}

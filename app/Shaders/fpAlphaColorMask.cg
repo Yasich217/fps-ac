@@ -1,0 +1,23 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! @file fpAlphaColorMask.cg
+
+Shader for rendering a silhouette in a single color, suitable for using with a text texture, for example.
+
+Alpha must be controlled by setting the alpha on the fillColor.
+
+*/
+
+float4 main(float2 tc : TEXCOORD0,
+            float2 sc : TEXCOORD1,
+            uniform float4 fillColor,
+            uniform sampler2D texture,
+            uniform sampler2D mask): COLOR
+{
+	float ma = 1.0-tex2D(mask,sc).a;
+    return  fillColor * tex2D(texture,tc).a * ma;
+}

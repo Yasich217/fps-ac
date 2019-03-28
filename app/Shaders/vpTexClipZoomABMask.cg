@@ -1,0 +1,41 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! @file  vpTexClipZoom.cg
+
+*/
+
+#include "Shaders/libVertexFuncs.cg"
+#include "Shaders/libTexClipZoom.cg"
+
+output main(float3 position : POSITION,
+            float4 tc0 : TEXCOORD0,
+            uniform float4x4 ModelView,
+            uniform float4x4 ModelViewProj,
+            uniform float4x4 TextureTransform,
+            uniform float zoomA = 1,
+            uniform float zoomB = 1,
+            uniform float texClipAPosX,
+            uniform float texClipAPosY,
+            uniform float texClipAWidth,
+            uniform float texClipAHeight,
+            uniform float texClipBPosX,
+            uniform float texClipBPosY,
+            uniform float texClipBWidth,
+            uniform float texClipBHeight,
+            uniform float texRectAWidth,
+            uniform float texRectAHeight,
+            uniform float texRectBWidth,
+            uniform float texRectBHeight)
+{
+    float2 texRectA = float2(texRectAWidth, texRectAHeight);
+    float2 texRectB = float2(texRectBWidth, texRectBHeight);
+    output OUT = process(position, tc0, ModelView, ModelViewProj, TextureTransform);
+    OUT.tc1.xy = OUT.tc0.xy;// tc1 use for mask
+    OUT.tc0.zw = clipPosRect( texRectB, float4(texClipBPosX, texClipBPosY, texClipBWidth, texClipBHeight), OUT.tc0.xy, zoomB);
+    OUT.tc0.xy = clipPosRect( texRectA, float4(texClipAPosX, texClipAPosY, texClipAWidth, texClipAHeight), OUT.tc0.xy, zoomA);
+    return OUT;
+}

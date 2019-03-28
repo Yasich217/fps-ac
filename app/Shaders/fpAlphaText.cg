@@ -1,0 +1,16 @@
+// BLEND_UNIFORM_ALPHA
+// BLEND_TEXTURE_ALPHA
+// DISCARD_ALPHA_0
+#ifdef GL_ES
+precision lowp float;
+#endif
+
+varying vec2 vTextureCoord;
+
+uniform sampler2D texture;
+uniform float alpha;
+
+void main(void) {
+    vec4 t = texture2D(texture, vTextureCoord);
+    gl_FragColor = vec4(t.rgb*alpha*t.a, t.a);
+}

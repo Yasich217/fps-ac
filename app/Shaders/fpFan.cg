@@ -1,0 +1,18 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! @file fpFan.cg
+
+*/
+
+float4 main(float2 tc : TEXCOORD0,
+            float4 tc1 : TEXCOORD1,
+			uniform float4 fillColor,
+            uniform sampler2D texture): COLOR
+{
+    float2 targetTexCoord = float2(atan(tc.x/tc.y)/(3.14/2.0),length(tc.xy)) * tc1.zw + tc1.xy;
+    return fillColor * tex2D(texture, targetTexCoord).a;
+}

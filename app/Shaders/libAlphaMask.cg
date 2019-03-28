@@ -1,0 +1,39 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! @file libAlphaMask.cg
+Common function for fpAlphaMaskBG/FG
+*/
+
+float4 zoomed(sampler2D texture, float2 tc, float scale, float offset)
+{
+    float2 cords = float2(tc.x/scale + (1-1/scale)/2 + offset, tc.y/scale + (1-1/scale)/2);
+    return tex2D(texture, cords);
+}
+
+float4 combine(float2 tc, 
+               uniform sampler2D textureA, 
+               uniform sampler2D textureB, 
+               uniform float zoomA, 
+               uniform float zoomB, 
+               uniform float swipe,
+               uniform float fade,
+               uniform float offsetA,
+               uniform float offsetB,
+               )
+{
+    if (fade != 0) {    // do a cross fade
+        return zoomed(textureA, tc, zoomA, offsetA) * (1-fade) + zoomed(textureB, tc, zoomB, offsetB) * fade;
+    }
+    else {              // do a swipe swipe
+        if (tc.x < 1-swipe) {
+            return zoomed(textureA, float2(tc.x + swipe, tc.y), zoomA, offsetA);
+        }
+        else {
+            return zoomed(textureB, float2(tc.x + swipe - 1, tc.y), zoomB, offsetB);
+        }
+    }
+}

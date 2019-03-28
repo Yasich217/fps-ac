@@ -1,0 +1,43 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! @file  vpTexClipZoom.cg
+
+*/
+
+#include "Shaders/libVertexFuncs.cg"
+#include "Shaders/libTexClipZoom.cg"
+
+output main(float3 position : POSITION,
+            float4 tc0 : TEXCOORD0,
+            uniform float4x4 ModelView,
+            uniform float4x4 ModelViewProj,
+            uniform float4x4 TextureTransform,
+            uniform float zoom = 1,
+            uniform float swipe = 0,
+            uniform float texClipPosX,
+            uniform float texClipPosY,
+            uniform float texClipWidth,
+            uniform float texClipHeight,
+            uniform float texRectWidth,
+            uniform float texRectHeight)
+{
+    float2 texRect = float2(texRectWidth, texRectHeight);
+    output OUT = process(position, tc0, ModelView, ModelViewProj, TextureTransform);
+    float posx = OUT.pos.x/OUT.pos.w - swipe * 2.0;
+    if(posx < -1.0){
+        OUT.tc0.x = - (posx + 1.0) / 2.0;
+        posx = -1.0;
+    } else if (posx > 1.0){
+        OUT.tc0.x = 1.0 - (posx - 1.0) / 2.0;
+        posx = 1.0;
+    }
+    OUT.pos.x = posx * OUT.pos.w;
+
+    OUT.tc1.xy = float2((posx + 1.0)*0.5, OUT.tc0.y);// tc1 use for mask
+    OUT.tc0.xy = clipPosRect( texRect, float4(texClipPosX, texClipPosY, texClipWidth, texClipHeight), OUT.tc0.xy, zoom);
+    return OUT;
+}

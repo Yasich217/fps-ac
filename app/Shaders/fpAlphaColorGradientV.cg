@@ -1,0 +1,27 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! @file fpAlphaColorGradient.cg
+ *  Draw a vertical gradient on its own
+ *
+ *    +-----------+ -- 0
+ *    |           |
+ *    +-----------+ --- startPosition
+ *    |           |
+ *    +-----------+ --- endPosition
+ *    |           |
+ *    +-----------+ --- 1
+ */
+
+float4 main(float2 tc : TEXCOORD0,
+            uniform float4 fillColor,
+            uniform float startPosition, 
+            uniform float endPosition, 
+            uniform sampler2D texture): COLOR
+{
+    float4 texel = tex2D(texture, tc)*smoothstep(startPosition, endPosition, 1 - tc.y);
+    return fillColor * (texel.a * fillColor.a);
+}

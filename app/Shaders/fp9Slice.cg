@@ -1,0 +1,53 @@
+/*
+**  SONY CONFIDENTIAL MATERIAL. DO NOT DISTRIBUTE.
+**  SNEI Trilithium
+**  Copyright (C) 2009-2010 Sony Corporation
+**  All Rights Reserved
+*/
+/*! @file fp9Slice.cg
+  
+Shader for slicing a fancy border with the 9-slice technique.  The sides and inner rectangle are
+stretched to fit. This is intended for use with textures that are NOT alpha-premultiplied
+(i.e. a transparent PNG).
+
+Parameters:
+
+width - outer rectangle width in display coordinates
+height - outer rectangle height in display coordinates
+top, right, bottom, left - extents of the inner rectangle, in display coordinates
+multiplyColor - the multiply color (alpha-premultiplied)
+
+All parameters are based on the size of the texture before slicing.
+
+*/
+
+float4 main(uniform float width, uniform float height,
+            uniform float top, uniform float bottom,
+            uniform float left, uniform float right,
+            uniform float4 multiplyColor,
+            float2 tc : TEXCOORD0, float2 dsize : TEXCOORD2,
+            uniform sampler2D texture) : COLOR
+{
+    //! Current pixel coordinate
+    float2 pos = tc*dsize;
+    pos.y = dsize.y - pos.y;
+
+    float2 ssize = float2(width, height);
+    float2 srect0 = float2(left, top), srect1 = float2(right, bottom);
+    float2 drect0 = float2(left, top), drect1 = dsize - float2(width - right, height - bottom);
+
+    float2 mapped = (pos - drect0)*(srect1 - srect0)/(drect1 - drect0) + srect0;
+    //float2 mapped = smoothstep(drect0, drect1, pos)*(srect1 - srect0) + srect0;
+
+    float2 final = float2(
+        (pos.x < left ? pos.x
+         : dsize.x - pos.x < width - right ? width - (dsize.x - pos.x)
+         : mapped.x),
+        height - (pos.y < top ? pos.y
+         : dsize.y - pos.y < height - bottom ? height - (dsize.y - pos.y)
+         : mapped.y));
+
+    float4 fragment = tex2D(texture, final/ssize);
+    fragment.rgb *= fragment.a;
+    return fragment*multiplyColor;
+}
